@@ -39,6 +39,8 @@ chrome.tabs.query({active: true, currentWindow: true}, function (tabs){
         console.log(response);
         let bias_score = score(response.data); 
         Display_Bias_Score_Word(bias_score);
+        let lean_score = lean(response.data); 
+        Display_Political_Lean(lean_score);
       }
     });
 
@@ -51,21 +53,26 @@ function score(text){
   let words_article = text.split(" ");
 
   //make set of words in webpage
-  let set_article = new Set([words_article]);
+  let set_article = new Set(words_article);
 
   //text from bias txt file: interpret new line as the end of a word
-  let words_polarizing = $.get("scripts/bias_text.py");
+  let words_polarizing = bias_array;
 
   //make set of words in txt file
-  let set_polarizing = new Set([words_polarizing]);
+  let set_polarizing = new Set(words_polarizing);
 
   //find intersection between set from webpage and set of biased words
   let intersection = new Set([...set_article].filter(x => set_polarizing.has(x)));
+  console.log(intersection)
 
   //count number of biased words and compare to wordcount of article, return tier underwhich ratio falls
   let bias = intersection.size;
+  console.log("number of bias words")
+  console.log(bias)
   let total = words_article.length;
   let bias_score = bias / total;
+  console.log("ratio of bias words to total worlds")
+  console.log(bias_score)
 
   return bias_score;
 }
@@ -78,51 +85,65 @@ function lean(text){
   let words_article = text.split(" ");
 
   //make set of words in webpage
-  let set_article = new Set([words_article]);
+  let set_article = new Set(words_article);
 
   //text from conservative txt file: interpret new line as the end of a word
-  let words_conservative = $.get("scripts/conseravtive_text.py");
+  let words_conservative = conservative_array;
 
   //text from liberal txt file: interpret new line as the end of a word
-  let words_liberal = $.get("scripts/liberal_text.py");
+  let words_liberal = liberal_array;
 
   //make set of words in txt file
-  let set_conservative = new Set([words_conservative]);
+  let set_conservative = new Set(words_conservative);
 
   //make set of words in txt file
-  let set_liberal = new Set([words_liberal]);
+  let set_liberal = new Set(words_liberal);
 
   //find intersection between set from webpage and set of conservative words
   let intersection_conservative = new Set([...set_article].filter(x => set_conservative.has(x)));
+  console.log("conservative words")
+  console.log(intersection_conservative)
 
   //find intersection between set from webpage and set of liberal words
   let intersection_liberal = new Set([...set_article].filter(x => set_liberal.has(x)));
+  console.log("liberal words")
+  console.log(intersection_liberal)
 
   //count number of biased words and compare to wordcount of article, return tier underwhich ratio falls
   let conservative_bias = intersection_conservative.size;
   let liberal_bias = intersection_liberal.size;
-  let total = words_article.length;
-  let conservative_bias_score = conservative_bias / total;
-  let liberal_bias_score = liberal_bias / total;
+  
+  console.log("conservative bias")
+  console.log(conservative_bias)
+  console.log("liberal bias")
+  console.log(liberal_bias)
 
-  let outcome = liberal_bias_score - conservative_bias_score
-  if(outcome > 0):
-    return '1'
+  let outcome = liberal_bias - conservative_bias
+  if(outcome > 0)
+  {
+    return 1;
+  }
 
-  if(outcome < 0):
-    return '-1'
+  if(outcome < 0)
+  {
+    return -1;
+  }
 
-  if(outcome = 0):
-    return '0'
+  if(outcome == 0)
+  {
+    return 0;
+  }
 }
 
+
 function Display_Bias_Score_Word(bias_score){
-  if (0 <= bias_score && bias_score <= 0.4)
+  if (0 <= bias_score && bias_score <= 0.01)
   {
     document.getElementById("bias").innerHTML = 'Neutral';
     document.getElementById("bias").style.background = "green";
+
   }
-  else if (0.4 < bias_score && bias_score <= 0.6)
+  else if (0.01 < bias_score && bias_score <= 0.02)
   {
     document.getElementById("bias").innerHTML = 'Skewed';
     document.getElementById("bias").style.background = "yellow";
@@ -140,12 +161,12 @@ function Display_Political_Lean(political_lean) {
     document.getElementById("lean").innerHTML = 'Conservative';
     document.getElementById("lean").style.background = "red";
   }
-  else if (political_lean == 0)
+  if (political_lean == 0)
   {
     document.getElementById("lean").innerHTML = 'Neutral';
     document.getElementById("lean").style.background = "yellow";
   }
-  else
+  if (political_lean > 0)
   {
     document.getElementById("bias").innerHTML = 'Liberal';
     document.getElementById("lean").style.background = "blue";
